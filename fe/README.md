@@ -58,12 +58,18 @@
 
 ## 💡 使用建议
 
-1. **字体配置 (推荐)**:
+1. **宿主机开启ssh-agent (必须)**:
+   运行 ssh-add -l。
+   如果显示 "The agent has no identities"，运行 ssh-add ~/.ssh/id_rsa (或者您的私钥路径) 添加它。（Mac）
+
+2. **字体配置 (推荐)**:
    为了让 Starship 提示符显示正确的图标（如 Git 分支图标），建议在**宿主机**（您的 Mac/Windows）上安装 **Nerd Font** 字体（推荐 `MesloLGS NF` 或 `JetBrainsMono Nerd Font`），并在 VS Code 终端设置中配置该字体。
 
-2. **Node 版本管理**:
+3. **Node 版本管理**:
    环境内置了 `nvm`。如果需要切换 Node 版本，可以直接使用：
    ```bash
    nvm install <version>
    nvm use <version>
    ```
+
+   
