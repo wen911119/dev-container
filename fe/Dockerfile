@@ -3,6 +3,7 @@ FROM debian:bullseye-slim
 
 # Set environment variables to non-interactive to avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm-256color
 
 # 2. Install system dependencies
 # Install git, curl for downloading, and zsh for the shell.
@@ -29,6 +30,9 @@ RUN . "$NVM_DIR/nvm.sh" && nvm install --lts && nvm alias default 'lts/*' && nvm
 RUN git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /usr/local/share/zsh-syntax-highlighting && \
     git clone https://github.com/zsh-users/zsh-autosuggestions.git /usr/local/share/zsh-autosuggestions
 
+# 5.1 Install Starship prompt (High performance, customizable prompt)
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
 # 6. Make shell configurations globally effective
 # Append sourcing of nvm and plugins to the global zshrc file.
 # This ensures they are loaded for any user with zsh as their shell.
@@ -36,8 +40,35 @@ RUN echo '\n# Load nvm' >> /etc/zsh/zshrc && \
     echo 'export NVM_DIR="/usr/local/nvm"' >> /etc/zsh/zshrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /etc/zsh/zshrc && \
     echo '\n# Load zsh plugins' >> /etc/zsh/zshrc && \
-    echo 'source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> /etc/zsh/zshrc && \
-    echo 'source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >> /etc/zsh/zshrc
+    echo 'autoload -U compinit && compinit -u' >> /etc/zsh/zshrc && \
+    echo 'alias ls="ls --color=auto"' >> /etc/zsh/zshrc && \
+    echo 'export LS_COLORS="di=01;36:ln=01;36:so=01;35:pi=33:ex=01;32:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43"' >> /etc/zsh/zshrc && \
+    echo 'zstyle ":completion:*" list-colors "${(s.:.)LS_COLORS}"' >> /etc/zsh/zshrc && \
+    echo 'alias ll="ls -lh"' >> /etc/zsh/zshrc && \
+    echo 'alias la="ls -lha"' >> /etc/zsh/zshrc && \
+    echo '\n# Git Aliases' >> /etc/zsh/zshrc && \
+    echo 'alias g="git"' >> /etc/zsh/zshrc && \
+    echo 'alias ga="git add"' >> /etc/zsh/zshrc && \
+    echo 'alias gaa="git add --all"' >> /etc/zsh/zshrc && \
+    echo 'alias gc="git commit"' >> /etc/zsh/zshrc && \
+    echo 'alias gcm="git commit -m"' >> /etc/zsh/zshrc && \
+    echo 'alias gs="git status"' >> /etc/zsh/zshrc && \
+    echo 'alias gp="git push"' >> /etc/zsh/zshrc && \
+    echo 'alias gl="git pull"' >> /etc/zsh/zshrc && \
+    echo 'alias gco="git checkout"' >> /etc/zsh/zshrc && \
+    echo '\n# Navigation & Utils' >> /etc/zsh/zshrc && \
+    echo 'alias ..="cd .."' >> /etc/zsh/zshrc && \
+    echo 'alias ...="cd ../.."' >> /etc/zsh/zshrc && \
+    echo 'alias grep="grep --color=auto"' >> /etc/zsh/zshrc && \
+    echo '\n# History Config' >> /etc/zsh/zshrc && \
+    echo 'HISTSIZE=10000' >> /etc/zsh/zshrc && \
+    echo 'SAVEHIST=10000' >> /etc/zsh/zshrc && \
+    echo 'setopt HIST_IGNORE_DUPS' >> /etc/zsh/zshrc && \
+    echo 'setopt SHARE_HISTORY' >> /etc/zsh/zshrc && \
+    echo '\n# Initialize Starship prompt' >> /etc/zsh/zshrc && \
+    echo 'eval "$(starship init zsh)"' >> /etc/zsh/zshrc && \
+    echo 'source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >> /etc/zsh/zshrc && \
+    echo 'source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> /etc/zsh/zshrc
 
 # 7. Set zsh as the default shell
 # This is more robust than using CMD ["zsh"].

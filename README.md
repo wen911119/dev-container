@@ -95,8 +95,8 @@ $TIMESTAMP = Get-Date -Format "yyyyMMddHHmmss"
 # 2. 在构建命令中使用该变量
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t your-dockerhub-username/your-image-name:latest \
-  -t your-dockerhub-username/your-image-name:$TIMESTAMP \
+  -t wen911119/fe-dev-container:latest \
+  -t wen911119/fe-dev-container:${TIMESTAMP} \
   --push .
 ```
 
