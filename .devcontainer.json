@@ -1,5 +1,5 @@
 {
-  "image": "wen911119/debug-container:20260122171502",
+  "image": "wen911119/fe-dev-container:20260122172103",
   "forwardPorts": [3000],
   "customizations": {
     // Configure properties specific to VS Code.
