@@ -13,7 +13,19 @@ RUN apt-get update && apt-get install -y \
     git \
     zsh \
     libatomic1 \
+    ca-certificates \
+    vim \
+    nano \
+    less \
+    procps \
+    sudo \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 2.1 Configure git for cross-platform compatibility
+# This prevents false positives when using Windows host with Linux container
+RUN git config --global core.autocrlf false && \
+    git config --global core.filemode false && \
+    git config --global core.eol lf
 
 # 3. Install nvm
 # This is placed before Node.js installation to leverage layer caching.
@@ -70,9 +82,26 @@ RUN echo '\n# Load nvm' >> /etc/zsh/zshrc && \
     echo 'source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >> /etc/zsh/zshrc && \
     echo 'source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> /etc/zsh/zshrc
 
-# 7. Set zsh as the default shell
-# This is more robust than using CMD ["zsh"].
-RUN chsh -s /bin/zsh
+# 7. Create a non-root user for devcontainer best practices
+# This avoids permission issues and follows security best practices
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m -s /bin/zsh $USERNAME \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && chown -R $USERNAME:$USERNAME $NVM_DIR
+
+# 8. Set zsh as the default shell for the user
+RUN chsh -s /bin/zsh $USERNAME
+
+# 9. Set working directory
+WORKDIR /workspace
+
+# 10. Switch to non-root user
+USER $USERNAME
 
 # Set a command that runs indefinitely to keep the container alive.
 # This makes it friendly for GUI tools like Docker Desktop.

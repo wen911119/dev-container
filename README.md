@@ -77,11 +77,19 @@ default         docker
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 
 # 2. 在构建命令中使用该变量
+# --progress=ttr 显示详细的构建和推送进度（包含进度条）
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t your-dockerhub-username/your-image-name:latest \
-  -t your-dockerhub-username/your-image-name:${TIMESTAMP} \
+  --progress=ttr \
+  -t wen911119/fe-dev-container:latest \
+  -t wen911119/fe-dev-container:${TIMESTAMP} \
   --push .
+
+# 3. 本地构建arm 版本用于测试（需要本机是arm芯片）
+docker buildx build \
+  --platform linux/arm64 \
+  -t wen911119/fe-dev-container-debug:${TIMESTAMP} \
+  --load .
 ```
 
 #### **Windows (PowerShell)**
@@ -93,11 +101,19 @@ docker buildx build \
 $TIMESTAMP = Get-Date -Format "yyyyMMddHHmmss"
 
 # 2. 在构建命令中使用该变量
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t wen911119/fe-dev-container:latest \
-  -t wen911119/fe-dev-container:${TIMESTAMP} \
+# --progress=ttr 显示详细的构建和推送进度（包含进度条）
+docker buildx build `
+  --platform linux/amd64,linux/arm64 `
+  --progress=ttr `
+  -t wen911119/fe-dev-container:latest `
+  -t wen911119/fe-dev-container:$TIMESTAMP `
   --push .
+
+# 3. 本地构建 amd64 版本用于测试（需要本机是x86_64芯片）
+docker buildx build `
+  --platform linux/amd64 `
+  -t wen911119/fe-dev-container-debug:$TIMESTAMP `
+  --load .
 ```
 
 通过这种方式，您的每一次构建都会自动获得一个独一无二、带有时间印记的标签，极大地提升了您镜像版本的管理水平。
