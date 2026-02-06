@@ -55,6 +55,12 @@ RUN git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /usr/loca
 # 5.1 Install Starship prompt (High performance, customizable prompt)
 RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
 
+# 5.2 Configure Starship
+# Set Docker indicator to green, and git branch to yellow
+RUN mkdir -p /etc/starship && \
+    echo '[container]\nformat = "[$symbol $name]($style) "\nstyle = "green bold"\n\n[git_branch]\nstyle = "yellow bold"' > /etc/starship/starship.toml
+ENV STARSHIP_CONFIG=/etc/starship/starship.toml
+
 # 6. Make shell configurations globally effective
 # Append sourcing of nvm and plugins to the global zshrc file.
 # This ensures they are loaded for any user with zsh as their shell.
