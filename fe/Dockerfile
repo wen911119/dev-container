@@ -19,7 +19,17 @@ RUN apt-get update && apt-get install -y \
     less \
     procps \
     sudo \
+    locales \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 2.0 Configure locales
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 
 # 2.1 Configure git for cross-platform compatibility
 # This prevents false positives when using Windows host with Linux container

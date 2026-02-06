@@ -77,10 +77,10 @@ default         docker
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 
 # 2. 在构建命令中使用该变量
-# --progress=ttr 显示详细的构建和推送进度（包含进度条）
+# --progress=tty 显示详细的构建和推送进度（包含进度条）
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --progress=ttr \
+  --progress=tty \
   -t wen911119/fe-dev-container:latest \
   -t wen911119/fe-dev-container:${TIMESTAMP} \
   --push .
@@ -101,10 +101,10 @@ docker buildx build \
 $TIMESTAMP = Get-Date -Format "yyyyMMddHHmmss"
 
 # 2. 在构建命令中使用该变量
-# --progress=ttr 显示详细的构建和推送进度（包含进度条）
+# --progress=tty 显示详细的构建和推送进度（包含进度条）
 docker buildx build `
   --platform linux/amd64,linux/arm64 `
-  --progress=ttr `
+  --progress=tty `
   -t wen911119/fe-dev-container:latest `
   -t wen911119/fe-dev-container:$TIMESTAMP `
   --push .

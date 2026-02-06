@@ -1,10 +1,16 @@
 {
   "image": "wen911119/fe-dev-container:latest",
-  
   // 自动转发端口（VS Code 会自动检测并转发应用使用的任何端口）
   // 你也可以预先配置常用端口，但这是可选的
-  "forwardPorts": [3000, 3001, 5173, 8080, 8081, 4200, 5000],
-  
+  "forwardPorts": [
+    3000,
+    3001,
+    5173,
+    8080,
+    8081,
+    4200,
+    5000
+  ],
   // 端口属性配置，用于更好的 VS Code 集成（可选）
   // 注意：VS Code 会自动检测并转发应用使用的任何端口（如 3003、4000 等），
   // 即使没有在这里列出。此部分只是为常用端口添加标签和自定义行为。
@@ -37,13 +43,10 @@
       "onAutoForward": "notify"
     }
   },
-  
   // 设置默认用户（与 Dockerfile 中的 ARG 匹配）
   "remoteUser": "vscode",
-  
   // 用于增强 devcontainer 体验的特性
   "features": {},
-  
   // VS Code 自定义配置
   "customizations": {
     "vscode": {
@@ -55,37 +58,27 @@
       "extensions": [
         // Code Spell Checker - 拼写检查，避免变量名和注释中的拼写错误
         "streetsidesoftware.code-spell-checker",
-        
         // ESLint - JavaScript/TypeScript 代码质量检查，自动检测和修复代码问题
         "dbaeumer.vscode-eslint",
-        
         // Prettier - 代码格式化工具，统一代码风格（配合 settings 中的 formatOnSave 使用）
         "esbenp.prettier-vscode",
-        
         // TypeScript - 增强的 TypeScript 支持，提供更好的类型检查和智能提示
         "ms-vscode.vscode-typescript-next",
-        
         // Auto Rename Tag - 自动重命名配对的 HTML/JSX 标签（修改 <div> 时自动修改 </div>）
         "formulahendry.auto-rename-tag",
-        
         // Path Intellisense - 文件路径自动补全，输入路径时自动提示文件/文件夹
         "christian-kohler.path-intellisense",
-        
         // JSON - JSON 文件语法高亮和验证
         "ms-vscode.vscode-json",
-        
         // GitLens - 增强 Git 功能，显示代码作者、提交历史、代码对比等
         "eamodio.gitlens",
-        
         // GitHub Copilot - AI 代码补全助手（需要 GitHub Copilot 订阅）
         "github.copilot",
-        
         // GitHub Copilot Chat - AI 代码对话助手（需要 GitHub Copilot 订阅）
         "github.copilot-chat"
       ],
-      
       // VS Code 设置
-      // 
+      //
       // ⚠️ 配置优先级说明（从高到低）：
       // 1. 工作区设置 (.vscode/settings.json) - 项目级别，优先级最高
       // 2. Remote 设置 (devcontainer.json 中的 settings) - 容器级别，当前配置
@@ -103,52 +96,37 @@
       // - 个人偏好设置保留在用户设置中（不会影响容器内的配置）
       "settings": {
         // ========== 编辑器格式化设置 ==========
-        
         // 保存时自动格式化代码（配合 Prettier 使用，确保代码风格统一）
         "editor.formatOnSave": true,
-        
         // 默认代码格式化工具（使用 Prettier 作为格式化器）
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        
         // 保存时自动执行的代码操作
         "editor.codeActionsOnSave": {
           // 自动修复 ESLint 检测到的问题（"explicit" 表示需要明确启用，避免意外修改）
           "source.fixAll.eslint": "explicit"
         },
-        
         // ========== 文件格式设置 ==========
-        
         // 统一使用 LF 作为行尾符（解决 Windows/Linux 跨平台问题）
         // 与 Dockerfile 中的 git 配置保持一致
         "files.eol": "\n",
-        
         // 保存时自动删除行尾空白字符（保持代码整洁）
         "files.trimTrailingWhitespace": true,
-        
         // 保存时在文件末尾自动插入换行符（符合 POSIX 标准，避免某些工具报错）
         "files.insertFinalNewline": true,
-        
         // ========== 终端设置 ==========
-        
         // Linux 容器中默认使用 zsh 作为终端（与 Dockerfile 中配置的 shell 一致）
         "terminal.integrated.defaultProfile.linux": "zsh",
-        
         // ========== Git 设置 ==========
-        
         // 自动获取远程仓库更新（在后台定期执行 git fetch，保持本地仓库信息最新）
         "git.autofetch": true,
-        
         // ========== TypeScript/JavaScript 设置 ==========
-        
         // 移动/重命名 TypeScript 文件时，自动更新所有相关的 import 路径
         "typescript.updateImportsOnFileMove.enabled": "always",
-        
         // 移动/重命名 JavaScript 文件时，自动更新所有相关的 import 路径
         "javascript.updateImportsOnFileMove.enabled": "always"
       }
     }
   },
-  
   // 容器创建后自动执行的命令（在容器启动后、VS Code 连接前运行）
   //
   // 命令说明：
@@ -179,7 +157,6 @@
   // - "chmod +x scripts/*.sh": 给脚本添加执行权限
   // - "echo 'Container ready!'": 简单的提示信息
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} || true",
-  
   // 挂载配置（可选，需要时取消注释）
   //
   // 什么是 mounts？
