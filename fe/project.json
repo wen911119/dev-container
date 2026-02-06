@@ -1,0 +1,6 @@
+{
+  "project_name": "preact-studio",
+  "repo_url": "https://github.com/wen911119/preact-studio.git",
+  "_comment": "Must use HTTPS URL for public repositories. For private repos, do not clone in Dockerfile.",
+  "repo_branch": "master"
+}

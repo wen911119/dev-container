@@ -115,9 +115,24 @@ RUN chsh -s /bin/zsh $USERNAME
 
 # 9. Set working directory
 WORKDIR /workspace
+RUN chown -R $USERNAME:$USERNAME /workspace
 
 # 10. Switch to non-root user
 USER $USERNAME
+
+# 11. Clone project code (Configured from project.json)
+# Copy project.json to the container to read configuration
+COPY --chown=$USERNAME:$USERNAME project.json /workspace/project.json
+
+# Read configuration and clone repository using native shell tools (grep/cut)
+# We use a flat JSON structure to make parsing easy without jq
+RUN REPO_URL=$(grep '"repo_url"' /workspace/project.json | cut -d '"' -f 4) && \
+    REPO_BRANCH=$(grep '"repo_branch"' /workspace/project.json | cut -d '"' -f 4) && \
+    echo "Cloning from $REPO_URL ($REPO_BRANCH)..." && \
+    git clone -b "$REPO_BRANCH" "$REPO_URL" current-project
+
+# 12. Set working directory
+WORKDIR /workspace/current-project
 
 # Set a command that runs indefinitely to keep the container alive.
 # This makes it friendly for GUI tools like Docker Desktop.

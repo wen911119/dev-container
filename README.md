@@ -118,7 +118,37 @@ docker buildx build `
 
 通过这种方式，您的每一次构建都会自动获得一个独一无二、带有时间印记的标签，极大地提升了您镜像版本的管理水平。
 
-## 5. 平台特定说明
+## 5. 一键构建与推送（推荐）
+
+为了简化构建流程，我们在 `fe` 目录下提供了自动化的构建脚本。这些脚本会自动：
+1.  **检查环境**：确认 Docker、buildx 及驱动配置是否正确。
+2.  **读取配置**：从 `fe/project.json` 中读取项目名称。
+3.  **生成标签**：自动生成 `latest` 和带时间戳的版本号（例如 `wen911119/ruiyun-component:20231027103000`）。
+4.  **构建推送**：构建多架构镜像并推送到 Docker Hub。
+
+#### **macOS/Linux**
+
+在终端中运行以下命令：
+
+```bash
+# 赋予执行权限（仅需一次）
+chmod +x fe/build_image_for_mac.sh
+
+# 执行构建脚本
+./fe/build_image_for_mac.sh
+```
+
+#### **Windows (PowerShell)**
+
+在 PowerShell 中运行以下命令：
+
+```powershell
+.\fe\build_image_for_windows.ps1
+```
+
+> **注意**：脚本会根据 `fe/project.json` 中的 `project_name` 字段来命名镜像。请确保该文件存在且配置正确。
+
+## 6. 平台特定说明
 
 `docker buildx` 利用 QEMU 模拟器来实现在一种 CPU 架构上构建另一种架构的镜像。这意味着：
 
@@ -132,7 +162,7 @@ docker buildx build `
 
 无论在哪种平台上构建，最终产出的镜像是完全一致的。
 
-## 6. 使用方法
+## 7. 使用方法
 
 多架构镜像的最大优势在于其使用的透明性。无论用户使用的是 ARM64 还是 x86_64 的机器，他们都使用完全相同的命令来拉取和运行镜像：
 
@@ -144,7 +174,7 @@ docker pull your-dockerhub-username/your-image-name:tag
 docker run -it your-dockerhub-username/your-image-name:tag
 ```
 
-## 7. 故障排查
+## 8. 故障排查
 
 **错误: `Multi-platform build is not supported for the docker driver`**
 
