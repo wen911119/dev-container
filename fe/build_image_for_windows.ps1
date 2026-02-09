@@ -122,8 +122,6 @@ if (Test-Path ".git_token") {
         $DockerArgs += "--secret"
         $DockerArgs += "id=git_token,src=.git_token"
     }
-} else {
-    # 文件不存在，静默忽略
 }
 
 # 追加 push 和上下文

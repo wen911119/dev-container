@@ -1,4 +1,4 @@
-# .git_token
+.git_token
 node_modules
 dist
 .DS_Store

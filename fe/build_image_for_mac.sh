@@ -94,8 +94,6 @@ if [ -f "$GIT_TOKEN_FILE" ]; then
     echo "🔐 发现有效 .git_token 文件，将使用密钥构建..."
     USE_SECRET=true
   fi
-else
-  : # 文件不存在，静默忽略
 fi
 
 if [ "$USE_SECRET" = true ]; then
@@ -105,12 +103,11 @@ fi
 # 追加 push 参数并执行
 BUILD_CMD="$BUILD_CMD --push ."
 
-echo "执行命令: $BUILD_CMD"
-eval $BUILD_CMD
-
-if [ $? -eq 0 ]; then
+# 执行构建
+if eval $BUILD_CMD; then
   echo "✅ 构建并推送成功!"
 else
-  echo "❌ 构建失败"
-  exit 1
+  EXIT_CODE=$?
+  echo "❌ 构建失败 (Exit Code: $EXIT_CODE)"
+  exit $EXIT_CODE
 fi

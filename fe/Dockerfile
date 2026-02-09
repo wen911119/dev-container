@@ -138,7 +138,23 @@ RUN if [ -n "$REPO_URL" ] && echo "$REPO_URL" | grep -q "^https://"; then \
             git clone -b "$REPO_BRANCH" "https://${TOKEN}@${CLEAN_URL}" current-project; \
         else \
             echo "🌍 No git_token secret found, trying public clone..."; \
-            git clone -b "$REPO_BRANCH" "$REPO_URL" current-project; \
+            if ! OUTPUT=$(git clone -b "$REPO_BRANCH" "$REPO_URL" current-project 2>&1); then \
+                echo "$OUTPUT"; \
+                echo "❌ ---------------------------------------------------"; \
+                if echo "$OUTPUT" | grep -qE "Authentication failed|Repository not found|could not read Username"; then \
+                    echo "❌ Authentication Failed / Repository Not Found"; \
+                    echo "❌ If this is a PRIVATE repository, you MUST provide an Access Token."; \
+                    echo "❌ Please check README.md and configure fe/.git_token file."; \
+                elif echo "$OUTPUT" | grep -q "Remote branch"; then \
+                    echo "❌ Remote Branch '$REPO_BRANCH' Not Found"; \
+                    echo "❌ Please check 'repo_branch' in fe/project.json."; \
+                else \
+                    echo "❌ Git Clone Failed (Unknown Error)"; \
+                    echo "❌ Please check your network connection or repo_url."; \
+                fi; \
+                echo "❌ ---------------------------------------------------"; \
+                exit 1; \
+            fi; \
         fi \
     else \
         echo "⚠️  Skipping code clone: repo_url is missing or not HTTPS." && \
