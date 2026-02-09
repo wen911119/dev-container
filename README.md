@@ -148,6 +148,42 @@ chmod +x fe/build_image_for_mac.sh
 
 > **注意**：脚本会根据 `fe/project.json` 中的 `project_name` 字段来命名镜像。请确保该文件存在且配置正确。
 
+### 5.1 配置构建模式 (project.json)
+
+您可以通过修改 `fe/project.json` 来决定构建出的镜像类型：
+
+1.  **带代码的完整镜像**（推荐）：
+    ```json
+    {
+      "project_name": "my-public-repo",
+      "repo_url": "https://github.com/my-org/my-public-repo.git",
+      "repo_branch": "main"
+    }
+    ```
+    *   **配置**：填入有效的 `repo_url`。
+    *   **结果**：构建出的镜像将**内置项目代码**，用户启动容器后无需 Clone 即可直接开发。
+
+2.  **纯环境镜像（不含代码）**：
+    ```json
+    {
+      "project_name": "fe-base-env",
+      "repo_url": ""
+    }
+    ```
+    *   **配置**：将 `repo_url` 留空。
+    *   **结果**：构建出的镜像**仅包含开发环境**（Node.js, Git, Zsh 等），不含代码。适用于通用基础镜像。
+
+### 5.2 支持私有仓库构建
+
+如果您的 `repo_url` 是私有仓库（例如 `https://github.com/my-org/private-repo.git`），Docker 构建过程需要身份验证。为了安全地注入凭证（防止 Token 泄露到镜像中），请按照以下步骤操作：
+
+1.  **生成 Token**：在 GitHub 生成一个 Personal Access Token (Classic)，勾选 `repo` 权限。
+2.  **创建密钥文件**：在 `fe` 目录下创建一个名为 `.git_token` 的文件。
+3.  **填入 Token**：将您的 Token 粘贴到该文件中（仅包含 Token 字符串，无空格换行）。
+4.  **运行构建**：再次运行上述构建脚本。脚本会自动检测到 `.git_token` 并安全地使用它。
+
+> 该文件已被加入 `.gitignore`，不会被提交到代码仓库。
+
 ## 6. 平台特定说明
 
 `docker buildx` 利用 QEMU 模拟器来实现在一种 CPU 架构上构建另一种架构的镜像。这意味着：

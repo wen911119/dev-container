@@ -120,16 +120,30 @@ RUN chown -R $USERNAME:$USERNAME /workspace
 # 10. Switch to non-root user
 USER $USERNAME
 
-# 11. Clone project code (Configured from project.json)
-# Copy project.json to the container to read configuration
-COPY --chown=$USERNAME:$USERNAME project.json /workspace/project.json
+# 11. Clone project code (Configured via Build Arguments & Secrets)
+ARG REPO_URL
+ARG REPO_BRANCH
 
-# Read configuration and clone repository using native shell tools (grep/cut)
-# We use a flat JSON structure to make parsing easy without jq
-RUN REPO_URL=$(grep '"repo_url"' /workspace/project.json | cut -d '"' -f 4) && \
-    REPO_BRANCH=$(grep '"repo_branch"' /workspace/project.json | cut -d '"' -f 4) && \
-    echo "Cloning from $REPO_URL ($REPO_BRANCH)..." && \
-    git clone -b "$REPO_BRANCH" "$REPO_URL" current-project
+# Logic:
+# 1. If git_token secret exists, use it to construct authenticated URL
+# 2. Otherwise, try public clone
+# 3. Handle cases where REPO_URL is missing
+RUN if [ -n "$REPO_URL" ] && echo "$REPO_URL" | grep -q "^https://"; then \
+        # Remove 'https://' prefix for token injection
+        CLEAN_URL=${REPO_URL#https://}; \
+        --mount=type=secret,id=git_token \
+        if [ -f /run/secrets/git_token ]; then \
+            echo "🔐 Detected git_token secret, using authenticated clone..."; \
+            TOKEN=$(cat /run/secrets/git_token); \
+            git clone -b "$REPO_BRANCH" "https://${TOKEN}@${CLEAN_URL}" current-project; \
+        else \
+            echo "🌍 No git_token secret found, trying public clone..."; \
+            git clone -b "$REPO_BRANCH" "$REPO_URL" current-project; \
+        fi \
+    else \
+        echo "⚠️  Skipping code clone: repo_url is missing or not HTTPS." && \
+        mkdir current-project; \
+    fi
 
 # 12. Set working directory
 WORKDIR /workspace/current-project

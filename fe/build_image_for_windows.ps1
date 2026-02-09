@@ -68,15 +68,22 @@ if ($ProjectContent -match '"project_name"\s*:\s*"([^"]+)"') {
 # 使用正则提取 repo_url 并校验 HTTPS
 if ($ProjectContent -match '"repo_url"\s*:\s*"([^"]+)"') {
     $RepoUrl = $matches[1]
-    if (-not $RepoUrl.StartsWith("https://")) {
-        Write-Host "❌ 错误: repo_url 必须是 HTTPS 格式 (以 https:// 开头)。" -ForegroundColor Red
-        Write-Host "   当前值: $RepoUrl"
-        Write-Host "   原因: Docker 构建过程中无法处理 SSH 密钥认证，只能 Clone 公开仓库。"
-        exit 1
+    if ($RepoUrl.StartsWith("https://")) {
+        Write-Host "✅ repo_url 有效: $RepoUrl" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️  repo_url 为空或非 HTTPS ($RepoUrl)。将构建【不含代码】的纯环境镜像。" -ForegroundColor Yellow
+        $RepoUrl = ""
     }
 } else {
-    Write-Host "❌ 错误: 无法从 project.json 中解析 repo_url" -ForegroundColor Red
-    exit 1
+    Write-Host "⚠️  未找到 repo_url。将构建【不含代码】的纯环境镜像。" -ForegroundColor Yellow
+    $RepoUrl = ""
+}
+
+# 使用正则提取 repo_branch
+if ($ProjectContent -match '"repo_branch"\s*:\s*"([^"]+)"') {
+    $RepoBranch = $matches[1]
+} else {
+    $RepoBranch = "main" # 默认值
 }
 
 # 3. 定义镜像名称和时间戳
@@ -88,13 +95,43 @@ Write-Host "🏷️  Tags: latest, ${Timestamp}"
 Write-Host "📂 上下文: $(Get-Location)"
 
 # 4. 执行多架构构建并推送
-# 注意: PowerShell 中换行符是 `
-docker buildx build `
-  --platform linux/amd64,linux/arm64 `
-  --progress=tty `
-  -t "${ImageBase}:latest" `
-  -t "${ImageBase}:${Timestamp}" `
-  --push .
+# 构造基础参数数组
+$DockerArgs = @(
+    "buildx", "build",
+    "--platform", "linux/amd64,linux/arm64",
+    "--progress=tty",
+    "--build-arg", "REPO_URL=$RepoUrl",
+    "--build-arg", "REPO_BRANCH=$RepoBranch",
+    "-t", "${ImageBase}:latest",
+    "-t", "${ImageBase}:${Timestamp}"
+)
+
+# 检查是否存在 .git_token 文件
+if (Test-Path ".git_token") {
+    $TokenContent = Get-Content ".git_token" -Raw
+    if ($null -ne $TokenContent) {
+        $TokenContent = $TokenContent.Trim()
+    }
+
+    if ([string]::IsNullOrWhiteSpace($TokenContent)) {
+        # 内容为空，静默忽略
+    } elseif ($TokenContent -eq "REPLACE_WITH_YOUR_GITHUB_TOKEN_HERE") {
+        # 内容为占位符，静默忽略
+    } else {
+        Write-Host "🔐 发现有效 .git_token 文件，将使用密钥构建..." -ForegroundColor Cyan
+        $DockerArgs += "--secret"
+        $DockerArgs += "id=git_token,src=.git_token"
+    }
+} else {
+    # 文件不存在，静默忽略
+}
+
+# 追加 push 和上下文
+$DockerArgs += "--push"
+$DockerArgs += "."
+
+# 执行命令
+docker $DockerArgs
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ 构建并推送成功!" -ForegroundColor Green

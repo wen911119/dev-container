@@ -45,6 +45,7 @@ echo "✅ 环境检查通过 (Driver: $CURRENT_DRIVER)"
 # 使用 grep 和 cut 提取值，无需依赖 jq
 PROJECT_NAME=$(grep '"project_name"' project.json | cut -d '"' -f 4)
 REPO_URL=$(grep '"repo_url"' project.json | cut -d '"' -f 4)
+REPO_BRANCH=$(grep '"repo_branch"' project.json | cut -d '"' -f 4)
 
 if [ -z "$PROJECT_NAME" ]; then
   echo "❌ 错误: 无法从 project.json 中解析 project_name"
@@ -52,11 +53,12 @@ if [ -z "$PROJECT_NAME" ]; then
 fi
 
 # 检查 repo_url 是否为 HTTPS
-if [[ ! "$REPO_URL" =~ ^https:// ]]; then
-  echo "❌ 错误: repo_url 必须是 HTTPS 格式 (以 https:// 开头)。"
-  echo "   当前值: $REPO_URL"
-  echo "   原因: Docker 构建过程中无法处理 SSH 密钥认证，只能 Clone 公开仓库。"
-  exit 1
+if [[ "$REPO_URL" =~ ^https:// ]]; then
+  echo "✅ repo_url 有效: $REPO_URL"
+else
+  echo "⚠️  repo_url 为空或非 HTTPS ($REPO_URL)。将构建【不含代码】的纯环境镜像。"
+  # 清空变量以确保 Dockerfile 逻辑正确跳过
+  REPO_URL=""
 fi
 
 # 3. 定义镜像名称和时间戳
@@ -68,12 +70,43 @@ echo "🏷️  Tags: latest, ${TIMESTAMP}"
 echo "📂 上下文: $(pwd)"
 
 # 4. 执行多架构构建并推送
-docker buildx build \
+BUILD_CMD="docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --progress=tty \
-  -t "${IMAGE_BASE}:latest" \
-  -t "${IMAGE_BASE}:${TIMESTAMP}" \
-  --push .
+  --build-arg REPO_URL=\"$REPO_URL\" \
+  --build-arg REPO_BRANCH=\"$REPO_BRANCH\" \
+  -t \"${IMAGE_BASE}:latest\" \
+  -t \"${IMAGE_BASE}:${TIMESTAMP}\""
+
+# 检查是否存在 .git_token 文件且内容有效
+GIT_TOKEN_FILE=".git_token"
+USE_SECRET=false
+
+if [ -f "$GIT_TOKEN_FILE" ]; then
+  # 读取文件内容并去除空白字符
+  TOKEN_CONTENT=$(cat "$GIT_TOKEN_FILE" | tr -d '[:space:]')
+  
+  if [ -z "$TOKEN_CONTENT" ]; then
+    : # 内容为空，静默忽略
+  elif [ "$TOKEN_CONTENT" = "REPLACE_WITH_YOUR_GITHUB_TOKEN_HERE" ]; then
+    : # 内容为占位符，静默忽略
+  else
+    echo "🔐 发现有效 .git_token 文件，将使用密钥构建..."
+    USE_SECRET=true
+  fi
+else
+  : # 文件不存在，静默忽略
+fi
+
+if [ "$USE_SECRET" = true ]; then
+  BUILD_CMD="$BUILD_CMD --secret id=git_token,src=.git_token"
+fi
+
+# 追加 push 参数并执行
+BUILD_CMD="$BUILD_CMD --push ."
+
+echo "执行命令: $BUILD_CMD"
+eval $BUILD_CMD
 
 if [ $? -eq 0 ]; then
   echo "✅ 构建并推送成功!"
