@@ -177,7 +177,12 @@ chmod +x fe/build_image_for_mac.sh
 
 如果您的 `repo_url` 是私有仓库（例如 `https://github.com/my-org/private-repo.git`），Docker 构建过程需要身份验证。为了安全地注入凭证（防止 Token 泄露到镜像中），请按照以下步骤操作：
 
-1.  **生成 Token**：在 GitHub 生成一个 Personal Access Token (Classic)，勾选 `repo` 权限。
+1.  **生成 Token**：
+    *   登录 GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)。
+    *   点击 **Generate new token (classic)**。
+    *   **Note**: 填写 `Dev Container Build`。
+    *   **Scopes**: 务必勾选 **`repo`** (Full control of private repositories)。
+    *   点击 Generate，复制生成的 `ghp_...` 开头的 Token。
 2.  **创建密钥文件**：在 `fe` 目录下创建一个名为 `.git_token` 的文件。
 3.  **填入 Token**：将您的 Token 粘贴到该文件中（仅包含 Token 字符串，无空格换行）。
 4.  **运行构建**：再次运行上述构建脚本。脚本会自动检测到 `.git_token` 并安全地使用它。

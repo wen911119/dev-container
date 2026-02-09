@@ -128,10 +128,11 @@ ARG REPO_BRANCH
 # 1. If git_token secret exists, use it to construct authenticated URL
 # 2. Otherwise, try public clone
 # 3. Handle cases where REPO_URL is missing
-RUN if [ -n "$REPO_URL" ] && echo "$REPO_URL" | grep -q "^https://"; then \
+# Note: We mount the secret with uid=1000 (vscode) so the non-root user can read it
+RUN --mount=type=secret,id=git_token,uid=1000 \
+    if [ -n "$REPO_URL" ] && echo "$REPO_URL" | grep -q "^https://"; then \
         # Remove 'https://' prefix for token injection
         CLEAN_URL=${REPO_URL#https://}; \
-        --mount=type=secret,id=git_token \
         if [ -f /run/secrets/git_token ]; then \
             echo "🔐 Detected git_token secret, using authenticated clone..."; \
             TOKEN=$(cat /run/secrets/git_token); \
