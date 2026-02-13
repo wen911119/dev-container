@@ -113,9 +113,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # 8. Set zsh as the default shell for the user
 RUN chsh -s /bin/zsh $USERNAME
 
-# 9. Set working directory
-WORKDIR /workspace
-RUN chown -R $USERNAME:$USERNAME /workspace
+# 9. Set working directory (Use home directory to play nice with VS Code default attach behavior)
+WORKDIR /home/$USERNAME
 
 # 10. Switch to non-root user
 USER $USERNAME
@@ -123,12 +122,12 @@ USER $USERNAME
 # 11. Clone project code (Configured via Build Arguments & Secrets)
 ARG REPO_URL
 ARG REPO_BRANCH
+ARG PROJECT_NAME
 
 # Logic:
 # 1. If git_token secret exists, use it to construct authenticated URL
 # 2. Otherwise, try public clone
 # 3. Handle cases where REPO_URL is missing
-# Note: We mount the secret with uid=1000 (vscode) so the non-root user can read it
 RUN --mount=type=secret,id=git_token,uid=1000 \
     if [ -n "$REPO_URL" ] && echo "$REPO_URL" | grep -q "^https://"; then \
         # Remove 'https://' prefix for token injection
@@ -136,10 +135,10 @@ RUN --mount=type=secret,id=git_token,uid=1000 \
         if [ -f /run/secrets/git_token ]; then \
             echo "🔐 Detected git_token secret, using authenticated clone..."; \
             TOKEN=$(cat /run/secrets/git_token); \
-            git clone -b "$REPO_BRANCH" "https://${TOKEN}@${CLEAN_URL}" current-project; \
+            git clone -b "$REPO_BRANCH" "https://${TOKEN}@${CLEAN_URL}" "$PROJECT_NAME"; \
         else \
             echo "🌍 No git_token secret found, trying public clone..."; \
-            if ! OUTPUT=$(git clone -b "$REPO_BRANCH" "$REPO_URL" current-project 2>&1); then \
+            if ! OUTPUT=$(git clone -b "$REPO_BRANCH" "$REPO_URL" "$PROJECT_NAME" 2>&1); then \
                 echo "$OUTPUT"; \
                 echo "❌ ---------------------------------------------------"; \
                 if echo "$OUTPUT" | grep -qE "Authentication failed|Repository not found|could not read Username"; then \
@@ -158,12 +157,17 @@ RUN --mount=type=secret,id=git_token,uid=1000 \
             fi; \
         fi \
     else \
-        echo "⚠️  Skipping code clone: repo_url is missing or not HTTPS." && \
-        mkdir current-project; \
+        echo "⚠️  Skipping code clone: repo_url is missing or not HTTPS."; \
     fi
 
-# 12. Set working directory
-WORKDIR /workspace/current-project
+# 12. Set working directory to the cloned project
+WORKDIR /home/$USERNAME/$PROJECT_NAME
+
+# 13. Auto-navigate to project directory when shell starts
+# If we are in HOME, cd to project directory automatically
+# This is a workaround for VS Code "Attach to Running Container" defaulting to /home/vscode
+# Note: We only add this if we are not already in the project directory
+RUN echo "if [ \"\$PWD\" = \"\$HOME\" ] && [ -d \"/home/$USERNAME/$PROJECT_NAME\" ]; then cd /home/$USERNAME/$PROJECT_NAME; fi" >> /home/$USERNAME/.zshrc
 
 # Set a command that runs indefinitely to keep the container alive.
 # This makes it friendly for GUI tools like Docker Desktop.

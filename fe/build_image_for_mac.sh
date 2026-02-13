@@ -73,6 +73,7 @@ echo "📂 上下文: $(pwd)"
 BUILD_CMD="docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --progress=tty \
+  --build-arg PROJECT_NAME=\"$PROJECT_NAME\" \
   --build-arg REPO_URL=\"$REPO_URL\" \
   --build-arg REPO_BRANCH=\"$REPO_BRANCH\" \
   -t \"${IMAGE_BASE}:latest\" \

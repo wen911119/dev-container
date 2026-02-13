@@ -100,6 +100,7 @@ $DockerArgs = @(
     "buildx", "build",
     "--platform", "linux/amd64,linux/arm64",
     "--progress=tty",
+    "--build-arg", "PROJECT_NAME=$ProjectName",
     "--build-arg", "REPO_URL=$RepoUrl",
     "--build-arg", "REPO_BRANCH=$RepoBranch",
     "-t", "${ImageBase}:latest",
